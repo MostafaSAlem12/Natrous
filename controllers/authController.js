@@ -8,19 +8,19 @@ const sendEmail = require('./../utils/email');
 
 const signToken = id => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '90d'
+    expiresIn: process.env.JWT_EXPIRES_IN
   });
 };
 
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
-  const expireDate = parseInt(process.env.JWT_EXPIRES_IN , 10) || 90;
-
   const cookieOptions = {
-    expires: new Date(Date.now() + expireDate * 24 * 60 * 60 * 1000 ),
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
     httpOnly: true
   };
-  if (process.env.NODE_ENV === 'production') cookieOptions.secure = false;
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
 
   res.cookie('jwt', token, cookieOptions);
 
@@ -43,6 +43,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm
   });
+
   createSendToken(newUser, 201, res);
 });
 
@@ -205,31 +206,3 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   // 4) Log user in, send JWT
   createSendToken(user, 200, res);
 });
-
-
-
-
-
-// 9 -
-
-
-// exports.upadatePassword =catchAsync(async(async (req,res,next)=>{
-
-//     const user = await User findById(req.user.id).select('+password');
-
-
-//     if((! await user.correctPassword(req.body.passwordCurrent, user.password))){
-//         return next(new AppError('your current password is wrong', 401))
-//     }
-    
-
-//     user.password = req.body.password;
-//     user.passwordConfirm = req.body.passwordConfirm
-//     await user.save();
-
-
-//     createSendToken(user,200,res)
-
-
-
-// }))
